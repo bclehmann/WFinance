@@ -1,7 +1,7 @@
 import * as FinanceInfo from "../store/FinanceInfo";
 // The top-level state object
 export interface ApplicationState {
-  financeInfo: FinanceInfo.IState | undefined;
+  financeInfo: FinanceInfo.IState;
 }
 
 // Whenever an action is dispatched, Redux will update each top-level application state property using

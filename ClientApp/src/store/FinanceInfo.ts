@@ -1,24 +1,36 @@
 ﻿import { Action, Reducer } from "redux";
+import { useDispatch } from "react-redux";
+import API from "../api";
 
 type BasicAction = { type: string } & Action;
-type FetchInfoAction = { resource: string } & BasicAction;
+type FetchInfoAction = { tickerSymbol: string } & BasicAction;
+type ReceiveResultsAction = { results: any[] } & BasicAction;
 
 const initialState = {
-  resource: undefined
+  tickerSymbol: undefined,
+  results: undefined
 };
 
 export interface IState {
-  resource?: string;
+  tickerSymbol?: string;
+  results?: any;
 }
 
 const actionTypes = {
-  fetchInfo: "FETCH_INFO"
+  fetchInfo: "FETCH_INFO",
+  receiveResults: "RECEIVE_RESULTS"
 };
 
-export const actionCreators = {
-  fetchInfo: (resource: string) =>
-    ({ type: actionTypes.fetchInfo, resource } as BasicAction)
-};
+export const actionCreators = (dispatch: any) => ({
+  setTicker: async (tickerSymbol: string) => {
+    dispatch({ type: actionTypes.fetchInfo, tickerSymbol } as BasicAction);
+  },
+  searchTickers: async (tickerSymbol: string) => {
+    var searchResultsPromise = API.searchSymbols(tickerSymbol);
+    var results = await searchResultsPromise;
+    dispatch({ type: actionTypes.receiveResults, results } as BasicAction);
+  }
+});
 
 export const reducer: Reducer<IState> = (
   state: IState | undefined,
@@ -30,8 +42,11 @@ export const reducer: Reducer<IState> = (
 
   switch (incomingAction.type) {
     case actionTypes.fetchInfo:
-      let action = incomingAction as FetchInfoAction;
-      return { ...state, resource: action.resource };
+      let fetchAction = incomingAction as FetchInfoAction;
+      return { ...state, tickerSymbol: fetchAction.tickerSymbol };
+    case actionTypes.receiveResults:
+      let receiveAction = incomingAction as ReceiveResultsAction;
+      return { ...state, results: receiveAction.results };
     default:
       return state;
   }
