@@ -1,0 +1,11 @@
+﻿.tickerAutocomplete {
+	width: 100%;
+}
+
+.autocompleteRow {
+	width: 100%;
+	padding: 0.2em;
+	font-size: 1.2em;
+	cursor:pointer;
+	background-color: lightgray;
+}
