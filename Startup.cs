@@ -6,14 +6,17 @@ using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
+using Where1.WFinance.Services;
 
-namespace WFinance
+namespace Where1.WFinance
 {
 	public class Startup
 	{
 		public Startup(IConfiguration configuration)
 		{
 			Configuration = configuration;
+			FinanceAPIService.Init();
 		}
 
 		public IConfiguration Configuration { get; }
@@ -28,6 +31,12 @@ namespace WFinance
 			{
 				configuration.RootPath = "ClientApp/build";
 			});
+
+			//services.AddHttpClient<IFinanceAPIService, FinanceAPIService>(client =>
+			//{
+
+			//});
+
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,6 +64,11 @@ namespace WFinance
 				endpoints.MapControllerRoute(
 					name: "default",
 					pattern: "{controller}/{action=Index}/{id?}");
+
+				endpoints.MapControllerRoute(
+					name: "api",
+					pattern: "api/{controller}/{action}/{id?}"
+				);
 			});
 
 			app.UseSpa(spa =>
