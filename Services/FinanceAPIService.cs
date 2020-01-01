@@ -13,13 +13,17 @@ namespace Where1.WFinance.Services
 	public class FinanceAPIService : IFinanceAPIService
 	{
 		private readonly HttpClient _httpClient;
-		private static string APIKey;
+		private static readonly string APIKey;
 
-		public static void Init() {
+		//
+		//This is a static constructor, it's only a thing in C#
+		//It is basically the same thing as an init method which runs automatically before the first instance is made	
+		static FinanceAPIService()
+		{
 			var APIFileReader = new StreamReader(new FileStream("FinanceAPIConfig.json", FileMode.Open));
 			string asString = APIFileReader.ReadToEnd();
 
-			Dictionary<string,string> parseResult = JsonSerializer.Deserialize<Dictionary<string,string>>(asString);
+			Dictionary<string, string> parseResult = JsonSerializer.Deserialize<Dictionary<string, string>>(asString);
 			APIKey = parseResult.GetValueOrDefault("AlphaVantageKey");
 			APIFileReader.Close();
 			APIFileReader.Dispose();

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Net.Http;
 using Where1.WFinance.Services;
 
 namespace Where1.WFinance
@@ -16,7 +17,7 @@ namespace Where1.WFinance
 		public Startup(IConfiguration configuration)
 		{
 			Configuration = configuration;
-			FinanceAPIService.Init();
+			//FinanceAPIService.Init();
 		}
 
 		public IConfiguration Configuration { get; }
@@ -31,12 +32,6 @@ namespace Where1.WFinance
 			{
 				configuration.RootPath = "ClientApp/build";
 			});
-
-			//services.AddHttpClient<IFinanceAPIService, FinanceAPIService>(client =>
-			//{
-
-			//});
-
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
