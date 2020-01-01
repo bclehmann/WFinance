@@ -9,4 +9,10 @@ Go to `/FinanceAPIConfig Example.json` and replace the placeholder field AlphaVa
 ---
 ![Logo](/ClientApp/public/images/logo_full.png)
 
+# Licenses
+
+Licenses of dependencies are in the folder `/Dependency Licenses`
+
+The license for this project is in the document `/LICENSE`
+
 # Made by Where 1
