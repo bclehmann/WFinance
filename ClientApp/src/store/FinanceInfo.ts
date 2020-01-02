@@ -75,6 +75,9 @@ export const actionCreators = (dispatch: any) => ({
     if (results.bestMatches === undefined) {
       return;
     }
+    if (results["Error Message"] !== undefined) {
+      return;
+    }
     //@ts-ignore
     results.bestMatches = results.bestMatches.map(m => ({
       //The API is actually low-key stupid
@@ -90,6 +93,7 @@ export const actionCreators = (dispatch: any) => ({
     }));
     dispatch({ type: actionTypes.receiveCandidates, results } as BasicAction);
 
+      console.log(displayItem);
     var pricingResults;
     switch (displayItem) {
       case displayEnum.daily:
@@ -133,10 +137,13 @@ export const actionCreators = (dispatch: any) => ({
       type: actionTypes.receivePricing,
       results: pricingResults
     } as BasicAction);
-    },
-    setDisplayItem: (index: number) => {
-        dispatch({ type: actionTypes.setDisplayItem, displayItem: index });
-    },
+  },
+  setDisplayItem: (index: number) => {
+    dispatch({ type: actionTypes.setDisplayItem, displayItem: index });
+  },
+  setTimeInterval: (interval: number) => {
+    dispatch({ type: actionTypes.setTimeInterval, timeInterval: interval });
+  }
 });
 
 export const reducer: Reducer<IState> = (

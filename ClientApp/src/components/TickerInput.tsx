@@ -1,7 +1,11 @@
 ﻿import * as React from "react";
 import { bindActionCreators, Dispatch } from "redux";
 import { connect } from "react-redux";
-import { actionCreators, displayEnum } from "../store/FinanceInfo";
+import {
+  actionCreators,
+  displayEnum,
+  timeIntervals
+} from "../store/FinanceInfo";
 import { ApplicationState as IState } from "../store/index";
 import "../components/home.css";
 
@@ -14,6 +18,7 @@ interface propType {
     timeInterval: number
   ) => void;
   setDisplayItem: (item: number) => void;
+  setTimeInterval: (item: number) => void;
 }
 
 interface stateType {
@@ -26,11 +31,10 @@ class TickerInput extends React.Component<propType, stateType> {
     super(props);
     this.state = { showAutoComplete: false };
   }
-
   render = () => (
     <span>
       <div className="row form-group">
-        <div className="col-8">
+        <div className="col-7">
           <input
             type="text"
             className="form-control"
@@ -59,42 +63,72 @@ class TickerInput extends React.Component<propType, stateType> {
             }}
             onClick={() => this.setState({ showAutoComplete: true })}
           />
+          <div
+            className="tickerAutocomplete"
+            style={{
+              display: this.state.showAutoComplete ? "initial" : "none"
+            }}
+            onBlur={() => this.setState({ showAutoComplete: false })}
+          >
+            {this.props.financeInfo.candidates.bestMatches.map((m, i) => {
+              return (
+                <div
+                  tabIndex={0}
+                  className="autocompleteRow"
+                  key={i}
+                  onClick={() => {
+                    this.props.setTicker(m.symbol);
+                    this.props.searchTickers(
+                      m.symbol,
+                      this.props.financeInfo.displayItem,
+                      this.props.financeInfo.timeInterval
+                    );
+                    //this.setState({ showAutoComplete: false });
+                  }}
+                >
+                  {m.symbol} - {m.name}, {m.region}
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="col-3">
+        <div className="col-2">
           <select
-            className="form-control form-control-lg"
+            className="form-control form-control"
             value={this.props.financeInfo.displayItem}
-            onChange={e => this.props.setDisplayItem(parseInt(e.target.value))}
+            onChange={e => {
+              this.props.setDisplayItem(parseInt(e.target.value));
+              this.props.searchTickers(
+                this.props.financeInfo.tickerSymbol!,
+                parseInt(e.target.value),
+                this.props.financeInfo.timeInterval
+              );
+            }}
           >
             <option value={displayEnum.daily}>Daily Close</option>
             <option value={displayEnum.intraday}>Intraday</option>
           </select>
         </div>
-      </div>
-
-      <div
-        className="tickerAutocomplete"
-        style={{ display: this.state.showAutoComplete ? "initial" : "none" }}
-      >
-        {this.props.financeInfo.candidates.bestMatches.map((m, i) => {
-          return (
-            <div
-              className="autocompleteRow"
-              key={i}
-              onClick={() => {
-                this.props.setTicker(m.symbol);
-                this.props.searchTickers(
-                  m.symbol,
-                  this.props.financeInfo.displayItem,
-                  this.props.financeInfo.timeInterval
-                );
-                this.setState({ showAutoComplete: false });
-              }}
-            >
-              {m.symbol} - {m.name}, {m.region}
-            </div>
-          );
-        })}
+        <div className="col-2">
+          <select
+            className="form-control form-control"
+            value={this.props.financeInfo.timeInterval}
+            onChange={e => {
+              this.props.setTimeInterval(parseInt(e.target.value));
+              this.props.searchTickers(
+                this.props.financeInfo.tickerSymbol!,
+                this.props.financeInfo.displayItem,
+                this.props.financeInfo.timeInterval
+              );
+            }}
+          >
+            {timeIntervals.map((t, i) => (
+              <option key={i} value={t}>
+                {t} Minutes
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </span>
   );
@@ -119,6 +153,9 @@ const mapDispatchToProps = (dispatch: any) => ({
     ),
   setDisplayItem: (item: number) => {
     actionCreators(dispatch).setDisplayItem(item);
+  },
+  setTimeInterval: (interval: number) => {
+    actionCreators(dispatch).setTimeInterval(interval);
   }
 });
 
