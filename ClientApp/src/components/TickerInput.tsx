@@ -1,14 +1,18 @@
 ﻿import * as React from "react";
 import { bindActionCreators, Dispatch } from "redux";
 import { connect } from "react-redux";
-import { actionCreators } from "../store/FinanceInfo";
+import { actionCreators, displayEnum } from "../store/FinanceInfo";
 import { ApplicationState as IState } from "../store/index";
 import "../components/home.css";
 
 interface propType {
   financeInfo: IState["financeInfo"];
   setTicker: (ticker: string) => void;
-  searchTickers: (ticker: string) => void;
+  searchTickers: (
+    ticker: string,
+    displayItem: displayEnum,
+    timeInterval: number
+  ) => void;
 }
 
 interface stateType {
@@ -42,7 +46,11 @@ class TickerInput extends React.Component<propType, stateType> {
           window.setTimeout(() => {
             //Prevents sending a new request unless they have stopped typing for 200 ms, so that we don't send a billion requests
             if (this.state.lastKeystroke! < new Date().getTime() - 200) {
-              this.props.searchTickers(this.props.financeInfo.tickerSymbol!);
+              this.props.searchTickers(
+                this.props.financeInfo.tickerSymbol!,
+                this.props.financeInfo.displayItem,
+                this.props.financeInfo.timeInterval
+              );
             }
           }, 250);
         }}
@@ -52,14 +60,18 @@ class TickerInput extends React.Component<propType, stateType> {
         className="tickerAutocomplete"
         style={{ display: this.state.showAutoComplete ? "initial" : "none" }}
       >
-        {this.props.financeInfo.results.bestMatches.map((m, i) => {
+        {this.props.financeInfo.candidates.bestMatches.map((m, i) => {
           return (
             <div
               className="autocompleteRow"
               key={i}
               onClick={() => {
                 this.props.setTicker(m.symbol);
-                this.props.searchTickers(m.symbol);
+                this.props.searchTickers(
+                  m.symbol,
+                  this.props.financeInfo.displayItem,
+                  this.props.financeInfo.timeInterval
+                );
                 this.setState({ showAutoComplete: false });
               }}
             >
@@ -79,8 +91,16 @@ const mapStateToProps = (state: IState) => ({
 const mapDispatchToProps = (dispatch: any) => ({
   setTicker: (tickerSymbol: string) =>
     actionCreators(dispatch).setTicker(tickerSymbol),
-  searchTickers: (tickerSymbol: string) =>
-    actionCreators(dispatch).searchTickers(tickerSymbol)
+  searchTickers: (
+    tickerSymbol: string,
+    displayItem: displayEnum,
+    timeInterval: number
+  ) =>
+    actionCreators(dispatch).searchTickers(
+      tickerSymbol,
+      displayItem,
+      timeInterval
+    )
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(TickerInput);
