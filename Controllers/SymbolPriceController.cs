@@ -12,25 +12,36 @@ namespace Where1.WFinance.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class SymbolSearchController : ControllerBase
+	public class SymbolPriceController : ControllerBase
 	{
 		private static readonly HttpClient _httpClient;
 
 		//
 		//This is a static constructor, it's only a thing in C#
 		//It is basically the same thing as an init method which runs automatically before the first instance is made
-		static SymbolSearchController()
+		static SymbolPriceController()
 		{
 			if (_httpClient == null)
 			{
 				_httpClient = new HttpClient();
 			}
 		}
-
-		public async Task<JsonResult> Post(SymbolSearchModel parameters)
+		//string symbol, string type = "DAILY", int stepMinutes=60
+		public async Task<IActionResult> Post(SymbolPriceModel parameters)
 		{
 			var service = new FinanceAPIService(_httpClient);
-			return await service.SearchSymbolAsync(parameters.Keywords);
+			switch (parameters.Type.ToUpper())
+			{
+				case "DAILY":
+					return await service.FetchSymbolPriceDailyAsync(parameters.Symbol);
+					break;
+				case "INTRADAY":
+					return await service.FetchSymbolPriceIntradayAsync(parameters.Symbol, parameters.StepMinutes.GetValueOrDefault());
+					break;
+				default:
+					return BadRequest();
+					break;
+			}
 		}
 	}
 }

@@ -1,10 +1,12 @@
-import * as React from 'react';
-import { connect } from 'react-redux';
+import * as React from "react";
+import { connect } from "react-redux";
 import TickerInput from "../components/TickerInput";
+import FinancePlot from "./FinancePlot";
 
 const Home = () => (
-    <div>
-        <TickerInput />
+  <div>
+    <TickerInput />
+    <FinancePlot />
   </div>
 );
 

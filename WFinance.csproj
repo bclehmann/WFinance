@@ -8,7 +8,7 @@
     <SpaRoot>ClientApp\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
     <UserSecretsId>c289de98-e844-4bc7-b6d5-c1aaf4d4449d</UserSecretsId>
-    <RootNamespace>Where1.Where1.WFinance</RootNamespace>
+    <RootNamespace>Where1.WFinance</RootNamespace>
     <ApplicationIcon />
     <OutputType>Exe</OutputType>
     <StartupObject />

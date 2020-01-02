@@ -40,5 +40,30 @@ namespace Where1.WFinance.Services
 
 			return new JsonResult(await response.Content.ReadAsStringAsync());
 		}
+
+		public async Task<JsonResult> FetchSymbolPriceIntradayAsync(string symbol, int stepMinutes)
+		{
+			int[] supportedIntervals = { 1, 5, 15, 30, 60 };
+			if (!supportedIntervals.Contains(stepMinutes)) {
+				string intervalString = "";
+				foreach (int curr in supportedIntervals) {
+					intervalString += curr+",";
+				}
+				intervalString=intervalString.Substring(0, intervalString.Length - 1);
+
+				throw new ArgumentException($"The API only supports intervals of {intervalString}", nameof(stepMinutes));
+			}
+
+			var response = await _httpClient.GetAsync($"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval={stepMinutes}min&outpusize=full&apikey={APIKey}");
+
+			return new JsonResult(await response.Content.ReadAsStringAsync());
+		}
+
+		public async Task<JsonResult> FetchSymbolPriceDailyAsync(string symbol)
+		{
+			var response = await _httpClient.GetAsync($"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=full&apikey={APIKey}");
+
+			return new JsonResult(await response.Content.ReadAsStringAsync());
+		}
 	}
 }
