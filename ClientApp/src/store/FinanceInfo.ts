@@ -86,7 +86,7 @@ export const actionCreators = (dispatch: any) => ({
       marketClose: m["6. marketClose"],
       timezone: m["7. timezone"],
       currency: m["8. currency"],
-      matchScore: m["9. matchScore"]
+      matchScore: parseFloat(m["9. matchScore"])
     }));
     dispatch({ type: actionTypes.receiveCandidates, results } as BasicAction);
 
@@ -114,17 +114,17 @@ export const actionCreators = (dispatch: any) => ({
       pricingResults["Series"] = pricingResults[propertyName];
       pricingResults[propertyName] = undefined;
     }
-    console.log(pricingResults);
+
     let arr = new Array();
     for (const property in pricingResults["Series"]) {
       //for in cannot guarantee any ordering
       let curr = pricingResults["Series"][property];
       arr.push({
-        open: curr["1. open"],
-        high: curr["2. high"],
-        low: curr["3. low"],
-        close: curr["4. close"],
-        volume: curr["5. volume"],
+        open: parseFloat(curr["1. open"]),
+        high: parseFloat(curr["2. high"]),
+        low: parseFloat(curr["3. low"]),
+        close: parseFloat(curr["4. close"]),
+        volume: parseFloat(curr["5. volume"]),
         date: new Date(property)
       });
     }
@@ -133,7 +133,10 @@ export const actionCreators = (dispatch: any) => ({
       type: actionTypes.receivePricing,
       results: pricingResults
     } as BasicAction);
-  }
+    },
+    setDisplayItem: (index: number) => {
+        dispatch({ type: actionTypes.setDisplayItem, displayItem: index });
+    },
 });
 
 export const reducer: Reducer<IState> = (

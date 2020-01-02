@@ -13,6 +13,7 @@ interface propType {
     displayItem: displayEnum,
     timeInterval: number
   ) => void;
+  setDisplayItem: (item: number) => void;
 }
 
 interface stateType {
@@ -28,34 +29,49 @@ class TickerInput extends React.Component<propType, stateType> {
 
   render = () => (
     <span>
-      <input
-        type="text"
-        className="form-control"
-        placeholder="Ticker (e.g. MSFT, HMC) or Name (Microsoft Technologies, Honda Motor Company)"
-        value={
-          this.props.financeInfo.tickerSymbol === undefined
-            ? ""
-            : this.props.financeInfo.tickerSymbol
-        }
-        onChange={e => {
-          this.props.setTicker(e.target.value);
-          this.setState({
-            lastKeystroke: new Date().getTime(),
-            showAutoComplete: true
-          });
-          window.setTimeout(() => {
-            //Prevents sending a new request unless they have stopped typing for 200 ms, so that we don't send a billion requests
-            if (this.state.lastKeystroke! < new Date().getTime() - 200) {
-              this.props.searchTickers(
-                this.props.financeInfo.tickerSymbol!,
-                this.props.financeInfo.displayItem,
-                this.props.financeInfo.timeInterval
-              );
+      <div className="row form-group">
+        <div className="col-8">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Ticker (e.g. MSFT, HMC) or Name (Microsoft Technologies, Honda Motor Company)"
+            value={
+              this.props.financeInfo.tickerSymbol === undefined
+                ? ""
+                : this.props.financeInfo.tickerSymbol
             }
-          }, 250);
-        }}
-        onClick={() => this.setState({ showAutoComplete: true })}
-      />
+            onChange={e => {
+              this.props.setTicker(e.target.value);
+              this.setState({
+                lastKeystroke: new Date().getTime(),
+                showAutoComplete: true
+              });
+              window.setTimeout(() => {
+                //Prevents sending a new request unless they have stopped typing for 200 ms, so that we don't send a billion requests
+                if (this.state.lastKeystroke! < new Date().getTime() - 200) {
+                  this.props.searchTickers(
+                    this.props.financeInfo.tickerSymbol!,
+                    this.props.financeInfo.displayItem,
+                    this.props.financeInfo.timeInterval
+                  );
+                }
+              }, 250);
+            }}
+            onClick={() => this.setState({ showAutoComplete: true })}
+          />
+        </div>
+        <div className="col-3">
+          <select
+            className="form-control form-control-lg"
+            value={this.props.financeInfo.displayItem}
+            onChange={e => this.props.setDisplayItem(parseInt(e.target.value))}
+          >
+            <option value={displayEnum.daily}>Daily Close</option>
+            <option value={displayEnum.intraday}>Intraday</option>
+          </select>
+        </div>
+      </div>
+
       <div
         className="tickerAutocomplete"
         style={{ display: this.state.showAutoComplete ? "initial" : "none" }}
@@ -100,7 +116,10 @@ const mapDispatchToProps = (dispatch: any) => ({
       tickerSymbol,
       displayItem,
       timeInterval
-    )
+    ),
+  setDisplayItem: (item: number) => {
+    actionCreators(dispatch).setDisplayItem(item);
+  }
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(TickerInput);
