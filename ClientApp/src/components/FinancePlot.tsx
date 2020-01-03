@@ -11,6 +11,17 @@ interface propType {
 class FinancePlot extends React.Component<propType, any> {
   render = () => {
     if (this.props.financeInfo.pricingResults !== null) {
+      let graphType = "";
+      switch (this.props.financeInfo.displayItem) {
+        case displayEnum.daily:
+          graphType = "Daily Close";
+          break;
+        case displayEnum.intraday:
+          graphType = `Intraday (${
+            this.props.financeInfo.timeInterval
+          } minute interval)`;
+          break;
+      }
       return (
         <span>
           <Plot
@@ -30,6 +41,17 @@ class FinancePlot extends React.Component<propType, any> {
                 }
               }
             ]}
+            layout={{
+              title: {
+                text: `${
+                  this.props.financeInfo.pricingResults["Meta Data"].Symbol
+                } | ${graphType}`,
+                x: 0, //Left aligned
+                font: {
+                  size: 20
+                }
+              }
+            }}
           />
         </span>
       );
