@@ -34,11 +34,11 @@ class TickerInput extends React.Component<propType, stateType> {
   render = () => (
     <span>
       <div className="row form-group">
-        <div className="col-7">
+        <div className="col-6">
           <input
             type="text"
             className="form-control"
-            placeholder="Ticker (e.g. MSFT, HMC) or Name (Microsoft Technologies, Honda Motor Company)"
+            placeholder="Ticker (e.g. MSFT) or Name (Microsoft Technologies)"
             value={
               this.props.financeInfo.tickerSymbol === undefined
                 ? ""
@@ -92,9 +92,13 @@ class TickerInput extends React.Component<propType, stateType> {
             })}
           </div>
         </div>
-        <div className="col-2">
+        <div className="row col-3">
+          <label className="col-4 col-form-label" htmlFor="typeSelect">
+            Type:
+          </label>
           <select
-            className="form-control form-control"
+            className="col-8 form-control"
+            id="typeSelect"
             value={this.props.financeInfo.displayItem}
             onChange={e => {
               this.props.setDisplayItem(parseInt(e.target.value));
@@ -109,16 +113,23 @@ class TickerInput extends React.Component<propType, stateType> {
             <option value={displayEnum.intraday}>Intraday</option>
           </select>
         </div>
-        <div className="col-2">
+        <div className="row col-3">
+          <label className="col-5 col-form-label" htmlFor="timeSelect">
+            Interval:
+          </label>
           <select
-            className="form-control form-control"
+            disabled={
+              this.props.financeInfo.displayItem !== displayEnum.intraday
+            }
+            className="col-7 form-control"
+            id="timeSelect"
             value={this.props.financeInfo.timeInterval}
             onChange={e => {
               this.props.setTimeInterval(parseInt(e.target.value));
-              this.props.searchTickers(
-                this.props.financeInfo.tickerSymbol!,
-                this.props.financeInfo.displayItem,
-                this.props.financeInfo.timeInterval
+                this.props.searchTickers(
+                    this.props.financeInfo.tickerSymbol!,
+                    this.props.financeInfo.displayItem,
+                    parseInt(e.target.value)
               );
             }}
           >

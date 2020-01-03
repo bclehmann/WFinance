@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Where1.WFinance.Services
@@ -34,36 +36,85 @@ namespace Where1.WFinance.Services
 			_httpClient = httpClient;
 		}
 
+		private string RemovePrefixes(string response)
+		{
+			string temp = Regex.Replace(response, @"\d\. ", "");
+			return Regex.Replace(temp, @"Time Series \(.*\)", "Series");
+		}
+
+		private List<Dictionary<string, string>> ConvertSeriesToArray(Dictionary<string, Dictionary<string, string>> input)
+		{
+			List<Dictionary<string, string>> objectList = new List<Dictionary<string, string>>();
+			foreach (KeyValuePair<string, Dictionary<string, string>> curr in input)
+			{//The type is unwieldly, but one would assume it's a string, so I didn't use var
+				var temp = new Dictionary<string, string>();
+				foreach (KeyValuePair<string, string> curr2 in curr.Value)
+				{
+					temp.Add(curr2.Key, curr2.Value);
+				}
+				temp.Add("date", curr.Key);
+
+				objectList.Add(temp);
+			}
+
+			return objectList;
+		}
+
+		private Dictionary<string, object> FormatSeriesRequest(string responseContent) {
+			var responseString = RemovePrefixes(responseContent);
+
+			var responseStringSeries = "{" + responseString.Substring(responseString.IndexOf("\"Series\""));
+
+			var obj = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(responseString);
+			var objSeries = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, Dictionary<string, string>>>>(responseStringSeries);
+			var series = ConvertSeriesToArray(objSeries.GetValueOrDefault("Series"));
+
+			var returnObj = new Dictionary<string, object>();
+			foreach (var curr in obj.Keys)
+			{
+				if (curr != "Series")
+				{
+					returnObj.Add(curr, obj.GetValueOrDefault(curr));
+				}
+			}
+			returnObj.Add("Series", series);
+
+			return returnObj;
+		}
+
 		public async Task<JsonResult> SearchSymbolAsync(string keywords)
 		{
 			var response = await _httpClient.GetAsync($"https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords={keywords}&apikey={APIKey}");
+			var responseString = RemovePrefixes(await response.Content.ReadAsStringAsync());
 
-			return new JsonResult(await response.Content.ReadAsStringAsync());
+			return new JsonResult(JsonSerializer.Deserialize<object>(responseString));
 		}
 
 		public async Task<JsonResult> FetchSymbolPriceIntradayAsync(string symbol, int stepMinutes)
 		{
 			int[] supportedIntervals = { 1, 5, 15, 30, 60 };
-			if (!supportedIntervals.Contains(stepMinutes)) {
+			if (!supportedIntervals.Contains(stepMinutes))
+			{
 				string intervalString = "";
-				foreach (int curr in supportedIntervals) {
-					intervalString += curr+",";
+				foreach (int curr in supportedIntervals)
+				{
+					intervalString += curr + ",";
 				}
-				intervalString=intervalString.Substring(0, intervalString.Length - 1);
+				intervalString = intervalString.Substring(0, intervalString.Length - 1);
 
 				throw new ArgumentException($"The API only supports intervals of {intervalString}", nameof(stepMinutes));
 			}
 
 			var response = await _httpClient.GetAsync($"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval={stepMinutes}min&outpusize=full&apikey={APIKey}");
 
-			return new JsonResult(await response.Content.ReadAsStringAsync());
+			return new JsonResult(FormatSeriesRequest(await response.Content.ReadAsStringAsync()));
 		}
 
 		public async Task<JsonResult> FetchSymbolPriceDailyAsync(string symbol)
 		{
 			var response = await _httpClient.GetAsync($"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=full&apikey={APIKey}");
 
-			return new JsonResult(await response.Content.ReadAsStringAsync());
+			return new JsonResult(FormatSeriesRequest(await response.Content.ReadAsStringAsync()));
 		}
 	}
 }

@@ -54,7 +54,8 @@ const actionTypes = {
   receiveCandidates: "RECEIVE_RESULTS",
   receivePricing: "RECEIVE_PRICING",
   setDisplayItem: "SET_DISPLAY_ITEM",
-  setTimeInterval: "SET_TIME_INTERVAL"
+  setTimeInterval: "SET_TIME_INTERVAL",
+  apiError: "API_ERROR"
 };
 
 export const actionCreators = (dispatch: any) => ({
@@ -69,8 +70,14 @@ export const actionCreators = (dispatch: any) => ({
     displayItem: displayEnum,
     timeInterval: number
   ) => {
-    var searchResultsPromise = await API.searchSymbols(tickerSymbol);
-    var results = JSON.parse(searchResultsPromise.data);
+    var results;
+    try {
+      var searchResults = await API.searchSymbols(tickerSymbol);
+      results = searchResults.data;
+    } catch (e) {
+      dispatch({ type: actionTypes.apiError } as BasicAction);
+      return;
+    }
 
     if (results.bestMatches === undefined) {
       return;
@@ -78,61 +85,30 @@ export const actionCreators = (dispatch: any) => ({
     if (results["Error Message"] !== undefined) {
       return;
     }
-    //@ts-ignore
-    results.bestMatches = results.bestMatches.map(m => ({
-      //The API is actually low-key stupid
-      symbol: m["1. symbol"],
-      name: m["2. name"],
-      type: m["3. type"],
-      region: m["4. region"],
-      marketOpen: m["5. marketOpen"],
-      marketClose: m["6. marketClose"],
-      timezone: m["7. timezone"],
-      currency: m["8. currency"],
-      matchScore: parseFloat(m["9. matchScore"])
-    }));
     dispatch({ type: actionTypes.receiveCandidates, results } as BasicAction);
 
-      console.log(displayItem);
     var pricingResults;
-    switch (displayItem) {
-      case displayEnum.daily:
-        pricingResults = await API.fetchPriceDaily(
-          results["bestMatches"][0]["symbol"]
-        );
-        break;
-      case displayEnum.intraday:
-        pricingResults = await API.fetchPriceIntraday(
-          results["bestMatches"][0]["symbol"],
-          timeInterval
-        );
-        break;
+    try {
+      switch (displayItem) {
+        case displayEnum.daily:
+          pricingResults = await API.fetchPriceDaily(
+            results["bestMatches"][0]["symbol"]
+          );
+          break;
+        case displayEnum.intraday:
+          pricingResults = await API.fetchPriceIntraday(
+            results["bestMatches"][0]["symbol"],
+            timeInterval
+          );
+          break;
+      }
+
+      pricingResults = pricingResults.data;
+    } catch (e) {
+      dispatch({ type: actionTypes.apiError } as BasicAction);
+      return;
     }
 
-    pricingResults = JSON.parse(pricingResults.data);
-    if (displayItem === displayEnum.daily) {
-      pricingResults["Series"] = pricingResults["Time Series (Daily)"];
-      pricingResults["Time Series (Daily)"] = undefined;
-    } else if (displayItem === displayEnum.intraday) {
-      var propertyName = `Time Series (${timeInterval}min)`;
-      pricingResults["Series"] = pricingResults[propertyName];
-      pricingResults[propertyName] = undefined;
-    }
-
-    let arr = new Array();
-    for (const property in pricingResults["Series"]) {
-      //for in cannot guarantee any ordering
-      let curr = pricingResults["Series"][property];
-      arr.push({
-        open: parseFloat(curr["1. open"]),
-        high: parseFloat(curr["2. high"]),
-        low: parseFloat(curr["3. low"]),
-        close: parseFloat(curr["4. close"]),
-        volume: parseFloat(curr["5. volume"]),
-        date: new Date(property)
-      });
-    }
-    pricingResults["Series"] = arr.sort((a, b) => a["date"] - b["date"]); //Sort by date ascending (most recent last)
     dispatch({
       type: actionTypes.receivePricing,
       results: pricingResults
@@ -195,6 +171,12 @@ export const reducer: Reducer<IState> = (
       return {
         ...state,
         timeInterval: timeAction.timeInterval
+      };
+      break;
+    case actionTypes.apiError:
+      return {
+        ...state,
+        pricingResults: initialState.pricingResults
       };
       break;
     default:
