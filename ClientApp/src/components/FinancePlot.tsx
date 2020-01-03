@@ -29,7 +29,41 @@ class FinancePlot extends React.Component<propType, any> {
   }
 
   render = () => {
-    if (this.props.financeInfo.pricingResults !== null) {
+    if (this.props.financeInfo.error) {
+      return (
+        <div className="alert alert-warning">
+          <h3>
+            We seem to have had an error. Please stand by. Error Code:{" "}
+            {this.props.financeInfo.errorCode}
+          </h3>
+          <p>
+            {(() => {
+              switch (this.props.financeInfo.errorCode) {
+                case 400: //Bad Request
+                  return "Bad Request. The server could not parse the request. This is probably the software developer's fault.";
+                  break;
+                case 429: //Too Many Requests
+                  return "Too Many Requests. You've exceeded the API call quota for this time period. You can spend more money on a premium API key to increase your quota.";
+                  break;
+                case 500: //Internal Server Error
+                  return "Internal Server Error. This is probably the software developer's fault.";
+                  break;
+              }
+            })()}
+            <hr />
+            <br />
+            <a
+              target="_blank"
+              href={`https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/${
+                this.props.financeInfo.errorCode
+              }`}
+            >
+              Error {this.props.financeInfo.errorCode}
+            </a>
+          </p>
+        </div>
+      );
+    } else if (this.props.financeInfo.pricingResults !== null) {
       let graphType = "";
       switch (this.props.financeInfo.displayItem) {
         case displayEnum.daily:

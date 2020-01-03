@@ -8,8 +8,8 @@ namespace Where1.WFinance.Services
 {
 	interface IFinanceAPIService
 	{
-		Task<JsonResult> SearchSymbolAsync(string keywords);
-		Task<JsonResult> FetchSymbolPriceDailyAsync(string symbol);
-		Task<JsonResult> FetchSymbolPriceIntradayAsync(string symbol, int stepMinutes);
+		Task<IActionResult> SearchSymbolAsync(string keywords);
+		Task<IActionResult> FetchSymbolPriceDailyAsync(string symbol);
+		Task<IActionResult> FetchSymbolPriceIntradayAsync(string symbol, int stepMinutes);
 	}
 }

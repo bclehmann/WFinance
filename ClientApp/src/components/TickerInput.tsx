@@ -11,14 +11,15 @@ import "../components/home.css";
 
 interface propType {
   financeInfo: IState["financeInfo"];
-  setTicker: (ticker: string) => void;
-  searchTickers: (
-    ticker: string,
+  setTicker: (ticker: string) => any;
+  searchTickers: (ticker: string) => any;
+  setDisplayItem: (item: number) => any;
+  setTimeInterval: (item: number) => any;
+  fetchPrice: (
+    symbol: string,
     displayItem: displayEnum,
-    timeInterval: number
-  ) => void;
-  setDisplayItem: (item: number) => void;
-  setTimeInterval: (item: number) => void;
+    interval: number
+  ) => any;
 }
 
 interface stateType {
@@ -54,9 +55,7 @@ class TickerInput extends React.Component<propType, stateType> {
                 //Prevents sending a new request unless they have stopped typing for 200 ms, so that we don't send a billion requests
                 if (this.state.lastKeystroke! < new Date().getTime() - 200) {
                   this.props.searchTickers(
-                    this.props.financeInfo.tickerSymbol!,
-                    this.props.financeInfo.displayItem,
-                    this.props.financeInfo.timeInterval
+                    this.props.financeInfo.tickerSymbol!
                   );
                 }
               }, 250);
@@ -78,12 +77,13 @@ class TickerInput extends React.Component<propType, stateType> {
                   key={i}
                   onClick={() => {
                     this.props.setTicker(m.symbol);
-                    this.props.searchTickers(
+                    this.props.searchTickers(m.symbol);
+                    this.props.fetchPrice(
                       m.symbol,
                       this.props.financeInfo.displayItem,
                       this.props.financeInfo.timeInterval
                     );
-                    //this.setState({ showAutoComplete: false });
+                    this.setState({ showAutoComplete: false });
                   }}
                 >
                   {m.symbol} - {m.name}, {m.region}
@@ -102,7 +102,7 @@ class TickerInput extends React.Component<propType, stateType> {
             value={this.props.financeInfo.displayItem}
             onChange={e => {
               this.props.setDisplayItem(parseInt(e.target.value));
-              this.props.searchTickers(
+              this.props.fetchPrice(
                 this.props.financeInfo.tickerSymbol!,
                 parseInt(e.target.value),
                 this.props.financeInfo.timeInterval
@@ -126,10 +126,10 @@ class TickerInput extends React.Component<propType, stateType> {
             value={this.props.financeInfo.timeInterval}
             onChange={e => {
               this.props.setTimeInterval(parseInt(e.target.value));
-                this.props.searchTickers(
-                    this.props.financeInfo.tickerSymbol!,
-                    this.props.financeInfo.displayItem,
-                    parseInt(e.target.value)
+              this.props.fetchPrice(
+                this.props.financeInfo.tickerSymbol!,
+                this.props.financeInfo.displayItem,
+                parseInt(e.target.value)
               );
             }}
           >
@@ -152,21 +152,16 @@ const mapStateToProps = (state: IState) => ({
 const mapDispatchToProps = (dispatch: any) => ({
   setTicker: (tickerSymbol: string) =>
     actionCreators(dispatch).setTicker(tickerSymbol),
-  searchTickers: (
-    tickerSymbol: string,
-    displayItem: displayEnum,
-    timeInterval: number
-  ) =>
-    actionCreators(dispatch).searchTickers(
-      tickerSymbol,
-      displayItem,
-      timeInterval
-    ),
+  searchTickers: (tickerSymbol: string) =>
+    actionCreators(dispatch).searchTickers(tickerSymbol),
   setDisplayItem: (item: number) => {
     actionCreators(dispatch).setDisplayItem(item);
   },
   setTimeInterval: (interval: number) => {
     actionCreators(dispatch).setTimeInterval(interval);
+  },
+  fetchPrice: (symbol: string, displayItem: displayEnum, interval: number) => {
+    actionCreators(dispatch).fetchPrice(symbol, displayItem, interval);
   }
 });
 
