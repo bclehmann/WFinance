@@ -9,6 +9,25 @@ interface propType {
 }
 
 class FinancePlot extends React.Component<propType, any> {
+  constructor(props: propType) {
+    super(props);
+
+    let now = new Date();
+    this.state = {
+      from: "2010-01-01",
+      to: `${now.getFullYear()}-${(now.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${now
+        .getDate()
+        .toString()
+        .padStart(2, "0")}`,
+      adjustYAutomatically: true,
+      min: 0,
+      max: 100,
+      graphType: "scatter"
+    };
+  }
+
   render = () => {
     if (this.props.financeInfo.pricingResults !== null) {
       let graphType = "";
@@ -24,6 +43,113 @@ class FinancePlot extends React.Component<propType, any> {
       }
       return (
         <span>
+          <div>
+            <div className="row">
+              <label htmlFor="from" className="col-2 col-form-label">
+                Start Date:
+              </label>
+              <input
+                type="date"
+                id="from"
+                value={this.state.from}
+                className="form-control col-2"
+                onChange={e => {
+                  this.setState({ from: e.target.value });
+                }}
+              />
+              <label htmlFor="to" className="col-2 col-form-label">
+                End Date:
+              </label>
+              <input
+                type="date"
+                id="to"
+                value={this.state.to}
+                className="form-control col-2"
+                onChange={e => {
+                  this.setState({ to: e.target.value });
+                }}
+              />
+              <label htmlFor="autoscale" className="col-2 col-form-label">
+                Autoscale Y-Axis:
+              </label>
+              <select
+                id="autoscale"
+                className="form-control col-2"
+                onChange={
+                  e =>
+                    this.setState({
+                      adjustYAutomatically: parseInt(e.target.value) === 1
+                    }) //Option elements cannot have a boolean value -_-
+                }
+                value={this.state.adjustYAutomatically ? 1 : 0} //Ditto
+              >
+                <option value={1}>Yes</option>
+                <option value={0}>No</option>
+              </select>
+            </div>
+            <div
+              className="row"
+              style={{
+                marginTop: "1em"
+              }}
+            >
+              <div className="col-4">
+                <div className="row">
+                  <label htmlFor="type" className="col-6 col-form-label">
+                    Graph Type:
+                  </label>
+                  <select
+                    id="type"
+                    className="form-control col-6"
+                    onChange={e =>
+                      this.setState({
+                        graphType: e.target.value
+                      })
+                    }
+                    value={this.state.graphType}
+                  >
+                    <option value="scatter">Line</option>
+                    <option value="ohlc">OHLC</option>
+                    <option value="candlestick">Candlestick</option>
+                  </select>
+                </div>
+              </div>
+              <div className="col-8">
+                <div className="row">
+                  <span
+                    style={{
+                      display: this.state.adjustYAutomatically ? "none" : "flex"
+                    }}
+                  >
+                    <label htmlFor="min" className="col-3 col-form-label">
+                      Minimum:
+                    </label>
+                    <input
+                      type="number"
+                      id="min"
+                      value={this.state.min}
+                      className="form-control col-3"
+                      onChange={e => {
+                        this.setState({ min: e.target.value });
+                      }}
+                    />
+                    <label htmlFor="max" className="col-3 col-form-label">
+                      Maximum:
+                    </label>
+                    <input
+                      type="number"
+                      id="max"
+                      value={this.state.max}
+                      className="form-control col-3"
+                      onChange={e => {
+                        this.setState({ max: e.target.value });
+                      }}
+                    />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
           <Plot
             data={[
               {
@@ -33,7 +159,19 @@ class FinancePlot extends React.Component<propType, any> {
                 y: this.props.financeInfo.pricingResults.Series.map(
                   (m: any) => m.close
                 ),
-                type: "scatter",
+                close: this.props.financeInfo.pricingResults.Series.map(
+                  (m: any) => m.close
+                ),
+                high: this.props.financeInfo.pricingResults.Series.map(
+                  (m: any) => m.high
+                ),
+                low: this.props.financeInfo.pricingResults.Series.map(
+                  (m: any) => m.low
+                ),
+                open: this.props.financeInfo.pricingResults.Series.map(
+                  (m: any) => m.open
+                ),
+                type: this.state.graphType,
                 mode: "lines",
                 line: {
                   width: 1,
@@ -42,6 +180,30 @@ class FinancePlot extends React.Component<propType, any> {
               }
             ]}
             layout={{
+              //updatemenus: [
+              //  {
+              //    y: 1, //Topmost
+              //    x: 1, //Rightmost
+              //    yanchor: "bottom",
+              //    buttons: [
+              //      {
+              //        method: "restyle",
+              //        args: ["type", "scatter"],
+              //        label: "Line"
+              //      },
+              //      {
+              //        method: "restyle",
+              //        args: ["type", "candlestick"],
+              //        label: "Candlestick"
+              //      },
+              //      {
+              //        method: "restyle",
+              //        args: ["type", "ohlc"],
+              //        label: "OHLC"
+              //      }
+              //    ]
+              //  }
+              //],
               title: {
                 text: `${
                   this.props.financeInfo.pricingResults["Meta Data"].Symbol
@@ -50,6 +212,22 @@ class FinancePlot extends React.Component<propType, any> {
                 font: {
                   size: 20
                 }
+              },
+              xaxis: {
+                autorange: false,
+                domain: [0, 1],
+                range: [this.state.from, this.state.to],
+                title: "Date",
+                type: "date",
+                rangeslider: {
+                  visible: false
+                }
+              },
+              yaxis: {
+                autorange: this.state.adjustYAutomatically,
+                domain: [0, 1],
+                range: [this.state.min, this.state.max],
+                type: "linear"
               }
             }}
           />
