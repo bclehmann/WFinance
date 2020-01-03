@@ -42,6 +42,11 @@ namespace Where1.WFinance.Services
 			return Regex.Replace(temp, @"Time Series \(.*\)", "Series");
 		}
 
+		private bool RateLimited(string response)
+		{
+			return response.Contains("\"Note\": \"Thank you for using Alpha Vantage! Our standard API call frequency ");
+		}
+
 		private List<Dictionary<string, string>> ConvertSeriesToArray(Dictionary<string, Dictionary<string, string>> input)
 		{
 			List<Dictionary<string, string>> objectList = new List<Dictionary<string, string>>();
@@ -60,7 +65,8 @@ namespace Where1.WFinance.Services
 			return objectList;
 		}
 
-		private Dictionary<string, object> FormatSeriesRequest(string responseContent) {
+		private Dictionary<string, object> FormatSeriesRequest(string responseContent)
+		{
 			var responseString = RemovePrefixes(responseContent);
 
 			var responseStringSeries = "{" + responseString.Substring(responseString.IndexOf("\"Series\""));
@@ -82,15 +88,21 @@ namespace Where1.WFinance.Services
 			return returnObj;
 		}
 
-		public async Task<JsonResult> SearchSymbolAsync(string keywords)
+		public async Task<IActionResult> SearchSymbolAsync(string keywords)
 		{
 			var response = await _httpClient.GetAsync($"https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords={keywords}&apikey={APIKey}");
-			var responseString = RemovePrefixes(await response.Content.ReadAsStringAsync());
+			string responseString = await response.Content.ReadAsStringAsync();
+
+			if (RateLimited(responseString))
+			{
+				return new StatusCodeResult(429);//Status code for too many requests
+			}
+			responseString = RemovePrefixes(await response.Content.ReadAsStringAsync());
 
 			return new JsonResult(JsonSerializer.Deserialize<object>(responseString));
 		}
 
-		public async Task<JsonResult> FetchSymbolPriceIntradayAsync(string symbol, int stepMinutes)
+		public async Task<IActionResult> FetchSymbolPriceIntradayAsync(string symbol, int stepMinutes)
 		{
 			int[] supportedIntervals = { 1, 5, 15, 30, 60 };
 			if (!supportedIntervals.Contains(stepMinutes))
@@ -102,19 +114,32 @@ namespace Where1.WFinance.Services
 				}
 				intervalString = intervalString.Substring(0, intervalString.Length - 1);
 
-				throw new ArgumentException($"The API only supports intervals of {intervalString}", nameof(stepMinutes));
+				return new BadRequestResult();
+				//throw new ArgumentException($"The API only supports intervals of {intervalString}", nameof(stepMinutes));
 			}
 
 			var response = await _httpClient.GetAsync($"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval={stepMinutes}min&outpusize=full&apikey={APIKey}");
+			string responseString = await response.Content.ReadAsStringAsync();
 
-			return new JsonResult(FormatSeriesRequest(await response.Content.ReadAsStringAsync()));
+			if (RateLimited(responseString))
+			{
+				return new StatusCodeResult(429);//Status code for too many requests
+			}
+
+			return new JsonResult(FormatSeriesRequest(responseString));
 		}
 
-		public async Task<JsonResult> FetchSymbolPriceDailyAsync(string symbol)
+		public async Task<IActionResult> FetchSymbolPriceDailyAsync(string symbol)
 		{
 			var response = await _httpClient.GetAsync($"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=full&apikey={APIKey}");
+			string responseString = await response.Content.ReadAsStringAsync();
 
-			return new JsonResult(FormatSeriesRequest(await response.Content.ReadAsStringAsync()));
+			if (RateLimited(responseString))
+			{
+				return new StatusCodeResult(429);//Status code for too many requests
+			}
+
+			return new JsonResult(FormatSeriesRequest(responseString));
 		}
 	}
 }

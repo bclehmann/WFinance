@@ -7,6 +7,7 @@ type FetchCandidatesAction = { tickerSymbol: string } & BasicAction;
 type ReceiveResultsAction = { results: resultsType } & BasicAction;
 type SetDisplayItemAction = { displayItem: displayEnum } & BasicAction;
 type SetTimeIntervalAction = { timeInterval: number } & BasicAction;
+type APIErrorAction = { errorCode: number } & BasicAction;
 
 interface resultsType {
   bestMatches: Array<any>;
@@ -38,7 +39,9 @@ const initialState = {
   },
   displayItem: displayEnum.daily,
   timeInterval: 15,
-  pricingResults: null
+  pricingResults: null,
+  error: false,
+  errorCode: undefined
 };
 
 export interface IState {
@@ -47,6 +50,8 @@ export interface IState {
   displayItem: displayEnum;
   timeInterval: number;
   pricingResults: any;
+  error: boolean;
+  errorCode?: number;
 }
 
 const actionTypes = {
@@ -55,7 +60,8 @@ const actionTypes = {
   receivePricing: "RECEIVE_PRICING",
   setDisplayItem: "SET_DISPLAY_ITEM",
   setTimeInterval: "SET_TIME_INTERVAL",
-  apiError: "API_ERROR"
+  apiError: "API_ERROR",
+  apiErrorResolved: "API_ERROR_RESOLVED"
 };
 
 export const actionCreators = (dispatch: any) => ({
@@ -65,17 +71,13 @@ export const actionCreators = (dispatch: any) => ({
       tickerSymbol
     } as BasicAction);
   },
-  searchTickers: async (
-    tickerSymbol: string,
-    displayItem: displayEnum,
-    timeInterval: number
-  ) => {
+  searchTickers: async (tickerSymbol: string) => {
     var results;
     try {
       var searchResults = await API.searchSymbols(tickerSymbol);
       results = searchResults.data;
     } catch (e) {
-      dispatch({ type: actionTypes.apiError } as BasicAction);
+      dispatch({ type: actionTypes.apiError, errorCode:e.response.status } as APIErrorAction);
       return;
     }
 
@@ -86,26 +88,26 @@ export const actionCreators = (dispatch: any) => ({
       return;
     }
     dispatch({ type: actionTypes.receiveCandidates, results } as BasicAction);
-
+  },
+  fetchPrice: async (
+    symbol: string,
+    displayItem: displayEnum,
+    timeInterval: number
+  ) => {
     var pricingResults;
     try {
       switch (displayItem) {
         case displayEnum.daily:
-          pricingResults = await API.fetchPriceDaily(
-            results["bestMatches"][0]["symbol"]
-          );
+          pricingResults = await API.fetchPriceDaily(symbol);
           break;
         case displayEnum.intraday:
-          pricingResults = await API.fetchPriceIntraday(
-            results["bestMatches"][0]["symbol"],
-            timeInterval
-          );
+          pricingResults = await API.fetchPriceIntraday(symbol, timeInterval);
           break;
       }
 
       pricingResults = pricingResults.data;
     } catch (e) {
-      dispatch({ type: actionTypes.apiError } as BasicAction);
+      dispatch({ type: actionTypes.apiError, errorCode:e.response.status } as APIErrorAction);
       return;
     }
 
@@ -113,6 +115,7 @@ export const actionCreators = (dispatch: any) => ({
       type: actionTypes.receivePricing,
       results: pricingResults
     } as BasicAction);
+    dispatch({ type: actionTypes.apiErrorResolved } as BasicAction);
   },
   setDisplayItem: (index: number) => {
     dispatch({ type: actionTypes.setDisplayItem, displayItem: index });
@@ -174,9 +177,18 @@ export const reducer: Reducer<IState> = (
       };
       break;
     case actionTypes.apiError:
+      let errorAction = incomingAction as APIErrorAction;
       return {
         ...state,
-        pricingResults: initialState.pricingResults
+        pricingResults: initialState.pricingResults,
+        error: true,
+        errorCode: errorAction.errorCode
+      };
+    case actionTypes.apiErrorResolved:
+      return {
+        ...state,
+        error: false,
+        errorCode: undefined
       };
       break;
     default:

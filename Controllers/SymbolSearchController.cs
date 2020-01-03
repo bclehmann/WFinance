@@ -27,7 +27,7 @@ namespace Where1.WFinance.Controllers
 			}
 		}
 
-		public async Task<JsonResult> Post(SymbolSearchModel parameters)
+		public async Task<IActionResult> Post(SymbolSearchModel parameters)
 		{
 			var service = new FinanceAPIService(_httpClient);
 			return await service.SearchSymbolAsync(parameters.Keywords);
