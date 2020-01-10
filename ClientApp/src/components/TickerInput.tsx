@@ -24,13 +24,12 @@ interface propType {
 
 interface stateType {
   lastKeystroke?: number;
-  showAutoComplete: boolean;
 }
 
 class TickerInput extends React.Component<propType, stateType> {
   constructor(props: propType) {
     super(props);
-    this.state = { showAutoComplete: false };
+    this.state = {};
   }
   render = () => (
     <span>
@@ -40,6 +39,7 @@ class TickerInput extends React.Component<propType, stateType> {
             type="text"
             className="form-control"
             placeholder="Ticker (e.g. MSFT) or Name (Microsoft Technologies)"
+            list="symbols"
             value={
               this.props.financeInfo.tickerSymbol === undefined
                 ? ""
@@ -48,8 +48,7 @@ class TickerInput extends React.Component<propType, stateType> {
             onChange={e => {
               this.props.setTicker(e.target.value);
               this.setState({
-                lastKeystroke: new Date().getTime(),
-                showAutoComplete: true
+                lastKeystroke: new Date().getTime()
               });
               window.setTimeout(() => {
                 //Prevents sending a new request unless they have stopped typing for 200 ms, so that we don't send a billion requests
@@ -57,11 +56,23 @@ class TickerInput extends React.Component<propType, stateType> {
                   this.props.searchTickers(
                     this.props.financeInfo.tickerSymbol!
                   );
+                  this.props.fetchPrice(
+                    this.props.financeInfo.tickerSymbol!,
+                    this.props.financeInfo.displayItem,
+                    this.props.financeInfo.timeInterval
+                  );
                 }
               }, 250);
             }}
-            onClick={() => this.setState({ showAutoComplete: true })}
           />
+          <datalist id="symbols">
+            {this.props.financeInfo.candidates.bestMatches.map((m, i) => (
+              <option value={m.symbol}>
+                {m.symbol} - {m.name}, {m.region}
+              </option>
+            ))}
+          </datalist>
+          {/*
           <div
             className="tickerAutocomplete"
             style={{
@@ -90,7 +101,7 @@ class TickerInput extends React.Component<propType, stateType> {
                 </div>
               );
             })}
-          </div>
+          </div>*/}
         </div>
         <div className="row col-3">
           <label className="col-4 col-form-label" htmlFor="typeSelect">
