@@ -72,36 +72,6 @@ class TickerInput extends React.Component<propType, stateType> {
               </option>
             ))}
           </datalist>
-          {/*
-          <div
-            className="tickerAutocomplete"
-            style={{
-              display: this.state.showAutoComplete ? "initial" : "none"
-            }}
-            onBlur={() => this.setState({ showAutoComplete: false })}
-          >
-            {this.props.financeInfo.candidates.bestMatches.map((m, i) => {
-              return (
-                <div
-                  tabIndex={0}
-                  className="autocompleteRow"
-                  key={i}
-                  onClick={() => {
-                    this.props.setTicker(m.symbol);
-                    this.props.searchTickers(m.symbol);
-                    this.props.fetchPrice(
-                      m.symbol,
-                      this.props.financeInfo.displayItem,
-                      this.props.financeInfo.timeInterval
-                    );
-                    this.setState({ showAutoComplete: false });
-                  }}
-                >
-                  {m.symbol} - {m.name}, {m.region}
-                </div>
-              );
-            })}
-          </div>*/}
         </div>
         <div className="row col-3">
           <label className="col-4 col-form-label" htmlFor="typeSelect">
