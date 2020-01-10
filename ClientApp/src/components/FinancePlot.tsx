@@ -214,30 +214,6 @@ class FinancePlot extends React.Component<propType, any> {
               }
             ]}
             layout={{
-              //updatemenus: [
-              //  {
-              //    y: 1, //Topmost
-              //    x: 1, //Rightmost
-              //    yanchor: "bottom",
-              //    buttons: [
-              //      {
-              //        method: "restyle",
-              //        args: ["type", "scatter"],
-              //        label: "Line"
-              //      },
-              //      {
-              //        method: "restyle",
-              //        args: ["type", "candlestick"],
-              //        label: "Candlestick"
-              //      },
-              //      {
-              //        method: "restyle",
-              //        args: ["type", "ohlc"],
-              //        label: "OHLC"
-              //      }
-              //    ]
-              //  }
-              //],
               title: {
                 text: `${
                   this.props.financeInfo.pricingResults["Meta Data"].Symbol
